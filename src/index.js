@@ -1,5 +1,3 @@
-/** @jsx h */
-
 const { h } = require('preact')
 const { Plugin } = require('@uppy/core')
 const Translator = require('@uppy/utils/lib/Translator')
