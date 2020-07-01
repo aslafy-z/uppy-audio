@@ -106,7 +106,6 @@ module.exports = class Audio extends Plugin {
     this._stop = this._stop.bind(this)
     this._startRecording = this._startRecording.bind(this)
     this._stopRecording = this._stopRecording.bind(this)
-    this._focus = this._focus.bind(this)
 
     this.audioActive = false
   }
