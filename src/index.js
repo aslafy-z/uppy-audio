@@ -4,9 +4,10 @@ const Translator = require('@uppy/utils/lib/Translator')
 const getFileTypeExtension = require('@uppy/utils/lib/getFileTypeExtension')
 const mimeTypes = require('@uppy/utils/lib/mimeTypes')
 const canvasToBlob = require('@uppy/utils/lib/canvasToBlob')
+const Recorder = require('opus-recorder')
 const supportsMediaRecorder = require('./supportsMediaRecorder')
-const CameraIcon = require('./CameraIcon')
-const CameraScreen = require('./CameraScreen')
+const MicrophoneIcon = require('./MicrophoneIcon')
+const MicrophoneScreen = require('./MicrophoneScreen')
 const PermissionsScreen = require('./PermissionsScreen')
 
 /**
@@ -21,27 +22,6 @@ function toMimeType (fileType) {
   }
   return fileType
 }
-
-/**
- * Is this MIME type a video?
- *
- * @param {string} mimeType - MIME type.
- * @returns {boolean}
- */
-function isVideoMimeType (mimeType) {
-  return /^video\/[^*]+$/.test(mimeType)
-}
-
-/**
- * Is this MIME type an image?
- *
- * @param {string} mimeType - MIME type.
- * @returns {boolean}
- */
-function isImageMimeType (mimeType) {
-  return /^image\/[^*]+$/.test(mimeType)
-}
-
 /**
  * Setup getUserMedia, with polyfill for older browsers
  * Adapted from: https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
@@ -67,9 +47,9 @@ function getMediaDevices () {
   }
 }
 /**
- * Webcam
+ * Audio
  */
-module.exports = class Webcam extends Plugin {
+module.exports = class Audio extends Plugin {
   static VERSION = require('../package.json').version
 
   constructor (uppy, opts) {
@@ -77,9 +57,10 @@ module.exports = class Webcam extends Plugin {
     this.mediaDevices = getMediaDevices()
     this.supportsUserMedia = !!this.mediaDevices
     this.protocol = location.protocol.match(/https/i) ? 'https' : 'http'
-    this.id = this.opts.id || 'Webcam'
-    this.title = this.opts.title || 'Camera'
+    this.id = this.opts.id || 'Audio'
+    this.title = this.opts.title || 'Audio'
     this.type = 'acquirer'
+    // TODO: Replace this camera icon to a microphone icon
     this.icon = () => (
       <svg aria-hidden="true" focusable="false" width="32" height="32" viewBox="0 0 32 32">
         <g fill="none" fill-rule="evenodd">
@@ -91,14 +72,12 @@ module.exports = class Webcam extends Plugin {
 
     this.defaultLocale = {
       strings: {
-        smile: 'Smile!',
-        takePicture: 'Take a picture',
-        startRecording: 'Begin video recording',
-        stopRecording: 'Stop video recording',
-        allowAccessTitle: 'Please allow access to your camera',
-        allowAccessDescription: 'In order to take pictures or record video with your camera, please allow camera access for this site.',
-        noCameraTitle: 'Camera Not Available',
-        noCameraDescription: 'In order to take pictures or record video, please connect a camera device',
+        startRecording: 'Begin audio recording',
+        stopRecording: 'Stop audio recording',
+        allowAccessTitle: 'Please allow access to your microphone',
+        allowAccessDescription: 'In order to record audio with your microphone, please allow microphone access for this site.',
+        noMicrophoneTitle: 'Microphone Not Available',
+        noMicrophoneDescription: 'In order to record audio, please connect a microphone device',
         recordingStoppedMaxSize: 'Recording stopped because the file size is about to exceed the limit',
         recordingLength: 'Recording length %{recording_length}'
       }
@@ -106,19 +85,11 @@ module.exports = class Webcam extends Plugin {
 
     // set default options
     const defaultOptions = {
-      onBeforeSnapshot: () => Promise.resolve(),
-      countdown: false,
       modes: [
-        'video-audio',
-        'video-only',
-        'audio-only',
-        'picture'
+        'wav',
       ],
-      mirror: true,
-      facingMode: 'user',
-      preferredImageMimeType: null,
-      preferredVideoMimeType: null,
-      showRecordingLength: false
+      showRecordingLength: false,
+      workerPath: '/static/waveWorker.min.js',
     }
 
     this.opts = { ...defaultOptions, ...opts }
@@ -130,20 +101,14 @@ module.exports = class Webcam extends Plugin {
 
     this.render = this.render.bind(this)
 
-    // Camera controls
+    // Microphone controls
     this._start = this._start.bind(this)
     this._stop = this._stop.bind(this)
-    this._takeSnapshot = this._takeSnapshot.bind(this)
     this._startRecording = this._startRecording.bind(this)
     this._stopRecording = this._stopRecording.bind(this)
-    this._oneTwoThreeSmile = this._oneTwoThreeSmile.bind(this)
     this._focus = this._focus.bind(this)
 
-    this.webcamActive = false
-
-    if (this.opts.countdown) {
-      this.opts.onBeforeSnapshot = this._oneTwoThreeSmile
-    }
+    this.audioActive = false
   }
 
   setOptions (newOpts) {
@@ -158,26 +123,19 @@ module.exports = class Webcam extends Plugin {
     this.setPluginState() // so that UI re-renders and we see the updated locale
   }
 
-  hasCameraCheck () {
+  hasMicrophoneCheck () {
     if (!this.mediaDevices) {
       return Promise.resolve(false)
     }
 
     return this.mediaDevices.enumerateDevices().then(devices => {
-      return devices.some(device => device.kind === 'videoinput')
+      return devices.some(device => device.kind === 'audioinput')
     })
   }
 
   getConstraints () {
-    const acceptsAudio = this.opts.modes.indexOf('video-audio') !== -1 ||
-      this.opts.modes.indexOf('audio-only') !== -1
-    const acceptsVideo = this.opts.modes.indexOf('video-audio') !== -1 ||
-      this.opts.modes.indexOf('video-only') !== -1 ||
-      this.opts.modes.indexOf('picture') !== -1
-
     return {
-      audio: acceptsAudio,
-      video: acceptsVideo ? { facingMode: this.opts.facingMode } : false
+      audio: true,
     }
   }
 
@@ -186,25 +144,25 @@ module.exports = class Webcam extends Plugin {
       return Promise.reject(new Error('Webcam access not supported'))
     }
 
-    this.webcamActive = true
+    this.audioActive = true
     const constraints = this.getConstraints()
 
-    this.hasCameraCheck().then(hasCamera => {
+    this.hasMicrophoneCheck().then(hasMicrophone => {
       this.setPluginState({
-        hasCamera: hasCamera
+        hasMicrophone: hasMicrophone
       })
 
-      // ask user for access to their camera
+      // ask user for access to their microphone
       return this.mediaDevices.getUserMedia(constraints)
         .then((stream) => {
           this.stream = stream
           this.setPluginState({
-            cameraReady: true
+            microphoneReady: true
           })
         })
         .catch((err) => {
           this.setPluginState({
-            cameraError: err
+            microphoneError: err
           })
         })
     })
@@ -219,32 +177,45 @@ module.exports = class Webcam extends Plugin {
     // Try to use the `opts.preferredVideoMimeType` or one of the `allowedFileTypes` for the recording.
     // If the browser doesn't support it, we'll fall back to the browser default instead.
     // Safari doesn't have the `isTypeSupported` API.
-    if (MediaRecorder.isTypeSupported) {
-      const { restrictions } = this.uppy.opts
-      let preferredVideoMimeTypes = []
-      if (this.opts.preferredVideoMimeType) {
-        preferredVideoMimeTypes = [this.opts.preferredVideoMimeType]
-      } else if (restrictions.allowedFileTypes) {
-        preferredVideoMimeTypes = restrictions.allowedFileTypes.map(toMimeType).filter(isVideoMimeType)
-      }
 
-      const acceptableMimeTypes = preferredVideoMimeTypes.filter((candidateType) =>
-        MediaRecorder.isTypeSupported(candidateType) &&
-          getFileTypeExtension(candidateType))
-      if (acceptableMimeTypes.length > 0) {
-        options.mimeType = acceptableMimeTypes[0]
-      }
-    }
+    // TODO: Reimplement that part for opus-recorder
+    // See https://github.com/chris-rudmin/opus-recorder#general-config-options
 
+    // if (MediaRecorder.isTypeSupported) {
+    //   const { restrictions } = this.uppy.opts
+    //   let preferredVideoMimeTypes = []
+    //   if (this.opts.preferredVideoMimeType) {
+    //     preferredVideoMimeTypes = [this.opts.preferredVideoMimeType]
+    //   } else if (restrictions.allowedFileTypes) {
+    //     preferredVideoMimeTypes = restrictions.allowedFileTypes.map(toMimeType).filter(isVideoMimeType)
+    //   }
+
+    //   const acceptableMimeTypes = preferredVideoMimeTypes.filter((candidateType) =>
+    //     MediaRecorder.isTypeSupported(candidateType) &&
+    //       getFileTypeExtension(candidateType))
+    //   if (acceptableMimeTypes.length > 0) {
+    //     options.mimeType = acceptableMimeTypes[0]
+    //   }
+    // }
+    options.workerPath = this.opts.workerPath
+    options.mimeType = "audio/wav"
+    options.mediaTrackConstraints = true // https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints
+    options.monitorGain = 0
+    options.numberOfChannels = 1
+    options.recordingGain = 1
+    options.wavBitDepth = 16
+    options.streamPages = true
     return options
   }
 
   _startRecording () {
-    this.recorder = new MediaRecorder(this.stream, this._getMediaRecorderOptions())
+    this.recorder = new Recorder(this._getRecorderOptions())
+
     this.recordingChunks = []
     let stoppingBecauseOfMaxSize = false
-    this.recorder.addEventListener('dataavailable', (event) => {
-      this.recordingChunks.push(event.data)
+
+    this.recorder.ondataavailable = (data) => {
+      this.recordingChunks.push(new Blob( [data], { type: 'audio/wav' }))
 
       const { restrictions } = this.uppy.opts
       if (this.recordingChunks.length > 1 &&
@@ -262,11 +233,13 @@ module.exports = class Webcam extends Plugin {
           this._stopRecording()
         }
       }
-    })
+    }
 
     // use a "time slice" of 500ms: ondataavailable will be called each 500ms
     // smaller time slices mean we can more accurately check the max file size restriction
-    this.recorder.start(500)
+    // this.recorder.start(500)
+    // FIXME: time slice is not supported by opus-recorder
+    this.recorder.start(this.stream)
 
     if (this.opts.showRecordingLength) {
       // Start the recordingLengthTimer if we are showing the recording length.
@@ -283,9 +256,9 @@ module.exports = class Webcam extends Plugin {
 
   _stopRecording () {
     const stopped = new Promise((resolve, reject) => {
-      this.recorder.addEventListener('stop', () => {
+      this.recorder.onstop = () => {
         resolve()
-      })
+      }
       this.recorder.stop()
 
       if (this.opts.showRecordingLength) {
@@ -299,7 +272,7 @@ module.exports = class Webcam extends Plugin {
       this.setPluginState({
         isRecording: false
       })
-      return this.getVideo()
+      return this.getAudio()
     }).then((file) => {
       try {
         this.uppy.addFile(file)
@@ -326,98 +299,8 @@ module.exports = class Webcam extends Plugin {
     this.stream.getVideoTracks().forEach((track) => {
       track.stop()
     })
-    this.webcamActive = false
+    this.audioActive = false
     this.stream = null
-  }
-
-  _getVideoElement () {
-    return this.el.querySelector('.uppy-Webcam-video')
-  }
-
-  _oneTwoThreeSmile () {
-    return new Promise((resolve, reject) => {
-      let count = this.opts.countdown
-
-      const countDown = setInterval(() => {
-        if (!this.webcamActive) {
-          clearInterval(countDown)
-          this.captureInProgress = false
-          return reject(new Error('Webcam is not active'))
-        }
-
-        if (count > 0) {
-          this.uppy.info(`${count}...`, 'warning', 800)
-          count--
-        } else {
-          clearInterval(countDown)
-          this.uppy.info(this.i18n('smile'), 'success', 1500)
-          setTimeout(() => resolve(), 1500)
-        }
-      }, 1000)
-    })
-  }
-
-  _takeSnapshot () {
-    if (this.captureInProgress) return
-    this.captureInProgress = true
-
-    this.opts.onBeforeSnapshot().catch((err) => {
-      const message = typeof err === 'object' ? err.message : err
-      this.uppy.info(message, 'error', 5000)
-      return Promise.reject(new Error(`onBeforeSnapshot: ${message}`))
-    }).then(() => {
-      return this._getImage()
-    }).then((tagFile) => {
-      this.captureInProgress = false
-      try {
-        this.uppy.addFile(tagFile)
-      } catch (err) {
-        // Logging the error, except restrictions, which is handled in Core
-        if (!err.isRestriction) {
-          this.uppy.log(err)
-        }
-      }
-    }, (error) => {
-      this.captureInProgress = false
-      throw error
-    })
-  }
-
-  _getImage () {
-    const video = this._getVideoElement()
-    if (!video) {
-      return Promise.reject(new Error('No video element found, likely due to the Webcam tab being closed.'))
-    }
-
-    const width = video.videoWidth
-    const height = video.videoHeight
-
-    const canvas = document.createElement('canvas')
-    canvas.width = width
-    canvas.height = height
-    const ctx = canvas.getContext('2d')
-    ctx.drawImage(video, 0, 0)
-
-    const { restrictions } = this.uppy.opts
-    let preferredImageMimeTypes = []
-    if (this.opts.preferredImageMimeType) {
-      preferredImageMimeTypes = [this.opts.preferredImageMimeType]
-    } else if (restrictions.allowedFileTypes) {
-      preferredImageMimeTypes = restrictions.allowedFileTypes.map(toMimeType).filter(isImageMimeType)
-    }
-
-    const mimeType = preferredImageMimeTypes[0] || 'image/jpeg'
-    const ext = getFileTypeExtension(mimeType) || 'jpg'
-    const name = `cam-${Date.now()}.${ext}`
-
-    return canvasToBlob(canvas, mimeType).then((blob) => {
-      return {
-        source: this.id,
-        name: name,
-        data: new Blob([blob], { type: mimeType }),
-        type: mimeType
-      }
-    })
   }
 
   getVideo () {
@@ -428,56 +311,46 @@ module.exports = class Webcam extends Plugin {
       return Promise.reject(new Error(`Could not retrieve recording: Unsupported media type "${mimeType}"`))
     }
 
-    const name = `webcam-${Date.now()}.${fileExtension}`
+    const name = `audio-${Date.now()}.${fileExtension}`
     const blob = new Blob(this.recordingChunks, { type: mimeType })
     const file = {
       source: this.id,
       name: name,
       data: new Blob([blob], { type: mimeType }),
-      type: mimeType
+      type: mimeType,
     }
 
     return Promise.resolve(file)
   }
 
-  _focus () {
-    if (!this.opts.countdown) return
-    setTimeout(() => {
-      this.uppy.info(this.i18n('smile'), 'success', 1500)
-    }, 1000)
-  }
-
   render () {
-    if (!this.webcamActive) {
+    if (!this.audioActive) {
       this._start()
     }
 
-    const webcamState = this.getPluginState()
+    const audioState = this.getPluginState()
 
-    if (!webcamState.cameraReady || !webcamState.hasCamera) {
+    if (!audioState.microphoneReady || !audioState.hasMicrophone) {
       return (
         <PermissionsScreen
-          icon={CameraIcon}
+          icon={MicrophoneIcon}
           i18n={this.i18n}
-          hasCamera={webcamState.hasCamera}
+          hadMicrophone={audioState.hasMicrophone}
         />
       )
     }
 
     return (
-      <CameraScreen
-        {...webcamState}
-        onSnapshot={this._takeSnapshot}
+      <MicrophoneScreen
+        {...audioState}
         onStartRecording={this._startRecording}
         onStopRecording={this._stopRecording}
-        onFocus={this._focus}
         onStop={this._stop}
         i18n={this.i18n}
         modes={this.opts.modes}
         showRecordingLength={this.opts.showRecordingLength}
         supportsRecording={supportsMediaRecorder()}
-        recording={webcamState.isRecording}
-        mirror={this.opts.mirror}
+        recording={audioState.isRecording}
         src={this.stream}
       />
     )
@@ -485,7 +358,7 @@ module.exports = class Webcam extends Plugin {
 
   install () {
     this.setPluginState({
-      cameraReady: false,
+      microphoneReady: false,
       recordingLengthSeconds: 0
     })
 

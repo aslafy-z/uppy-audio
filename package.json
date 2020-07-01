@@ -1,7 +1,7 @@
 {
-  "name": "@uppy/webcam",
-  "description": "Uppy plugin that takes photos or records videos using the device's camera.",
-  "version": "1.6.7",
+  "name": "@zadkiel/uppy-audio",
+  "description": "Uppy plugin that records audio using the device's microphone.",
+  "version": "1.0.0",
   "license": "MIT",
   "main": "lib/index.js",
   "style": "dist/style.min.css",
@@ -10,23 +10,21 @@
     "file uploader",
     "uppy",
     "uppy-plugin",
-    "webcam",
-    "picture",
-    "photo",
-    "video",
+    "audio",
+    "microphone",
     "record",
     "mediarecorder"
   ],
   "homepage": "https://uppy.io",
   "bugs": {
-    "url": "https://github.com/transloadit/uppy/issues"
+    "url": "https://github.com/aslafy-z/uppy-audio/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/transloadit/uppy.git"
+    "url": "git+https://github.com/aslafy-z/uppy-audio.git"
   },
   "dependencies": {
-    "@uppy/utils": "file:../utils",
+    "@uppy/utils": "3.1.0",
     "preact": "8.2.9"
   },
   "peerDependencies": {

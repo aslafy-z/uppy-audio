@@ -1,8 +1,8 @@
 import Uppy = require('@uppy/core')
-import Webcam = require('../')
+import Audio = require('../')
 
 {
-  Uppy<Uppy.StrictTypes>().use(Webcam, {
-    modes: ['video-only']
+  Uppy<Uppy.StrictTypes>().use(Audio, {
+    modes: ['wav']
   })
 }

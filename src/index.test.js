@@ -1,38 +1,38 @@
 const Uppy = require('@uppy/core')
-const Webcam = require('./index')
+const Audio = require('./index')
 
-describe('Webcam', () => {
+describe('Audio', () => {
   describe('_getMediaRecorderOptions', () => {
     it('should not have a mimeType set if no preferences given', () => {
       global.MediaRecorder = {
         isTypeSupported: () => true
       }
 
-      const uppy = Uppy().use(Webcam)
+      const uppy = Uppy().use(Audio)
       expect(
-        uppy.getPlugin('Webcam')._getMediaRecorderOptions().mimeType
+        uppy.getPlugin('Audio')._getMediaRecorderOptions().mimeType
       ).not.toBeDefined()
     })
 
     it('should use preferredVideoMimeType', () => {
       global.MediaRecorder = {
-        isTypeSupported: (ty) => ty === 'video/webm'
+        isTypeSupported: (ty) => ty === 'audio/wav'
       }
 
-      const uppy = Uppy().use(Webcam, { preferredVideoMimeType: 'video/webm' })
+      const uppy = Uppy().use(Audio, { preferredVideoMimeType: 'audio/wav' })
       expect(
-        uppy.getPlugin('Webcam')._getMediaRecorderOptions().mimeType
-      ).toEqual('video/webm')
+        uppy.getPlugin('Audio')._getMediaRecorderOptions().mimeType
+      ).toEqual('audio/wav')
     })
 
     it('should not use preferredVideoMimeType if it is not supported', () => {
       global.MediaRecorder = {
-        isTypeSupported: (ty) => ty === 'video/webm'
+        isTypeSupported: (ty) => ty === 'audio/wav'
       }
 
-      const uppy = Uppy().use(Webcam, { preferredVideoMimeType: 'video/mp4' })
+      const uppy = Uppy().use(Audio, { preferredVideoMimeType: 'audio/mp3' })
       expect(
-        uppy.getPlugin('Webcam')._getMediaRecorderOptions().mimeType
+        uppy.getPlugin('Audio')._getMediaRecorderOptions().mimeType
       ).not.toBeDefined()
     })
 
@@ -42,24 +42,24 @@ describe('Webcam', () => {
       }
 
       const uppy = Uppy({
-        restrictions: { allowedFileTypes: ['video/mp4', 'video/webm'] }
-      }).use(Webcam)
+        restrictions: { allowedFileTypes: ['audio/wav', 'audio/mp3'] }
+      }).use(Audio)
       expect(
-        uppy.getPlugin('Webcam')._getMediaRecorderOptions().mimeType
-      ).toEqual('video/mp4')
+        uppy.getPlugin('Audio')._getMediaRecorderOptions().mimeType
+      ).toEqual('audio/wav')
     })
 
     it('should use first supported type from allowedFileTypes', () => {
       global.MediaRecorder = {
-        isTypeSupported: (ty) => ty === 'video/webm'
+        isTypeSupported: (ty) => ty === 'audio/wav'
       }
 
       const uppy = Uppy({
-        restrictions: { allowedFileTypes: ['video/mp4', 'video/webm'] }
-      }).use(Webcam)
+        restrictions: { allowedFileTypes: ['audio/mp3', 'audio/wav'] }
+      }).use(Audio)
       expect(
-        uppy.getPlugin('Webcam')._getMediaRecorderOptions().mimeType
-      ).toEqual('video/webm')
+        uppy.getPlugin('Audio')._getMediaRecorderOptions().mimeType
+      ).toEqual('audio/wav')
     })
 
     it('should prefer preferredVideoMimeType over allowedFileTypes', () => {
@@ -68,12 +68,12 @@ describe('Webcam', () => {
       }
 
       const uppy = Uppy({
-        restrictions: { allowedFileTypes: ['video/mp4', 'video/webm'] }
+        restrictions: { allowedFileTypes: ['audio/mp3', 'audio/wav'] }
       })
-        .use(Webcam, { preferredVideoMimeType: 'video/webm' })
+        .use(Audio, { preferredVideoMimeType: 'audio/wav' })
       expect(
-        uppy.getPlugin('Webcam')._getMediaRecorderOptions().mimeType
-      ).toEqual('video/webm')
+        uppy.getPlugin('Audio')._getMediaRecorderOptions().mimeType
+      ).toEqual('audio/wav')
     })
 
     it('should not use allowedFileTypes if they are unsupported', () => {
@@ -82,10 +82,10 @@ describe('Webcam', () => {
       }
 
       const uppy = Uppy({
-        restrictions: { allowedFileTypes: ['video/mp4', 'video/webm'] }
-      }).use(Webcam)
+        restrictions: { allowedFileTypes: ['audio/mp3', 'audio/wav'] }
+      }).use(Audio)
       expect(
-        uppy.getPlugin('Webcam')._getMediaRecorderOptions().mimeType
+        uppy.getPlugin('Audio')._getMediaRecorderOptions().mimeType
       ).toEqual(undefined)
     })
   })
