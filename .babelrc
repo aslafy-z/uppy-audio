@@ -13,7 +13,11 @@
         "@babel/plugin-transform-object-assign",
         "@babel/plugin-proposal-class-properties",
         "@babel/plugin-transform-typescript",
-        "@babel/plugin-syntax-jsx",
-        "@babel/plugin-transform-react-jsx"
+        [
+            "@babel/plugin-transform-react-jsx",
+            {
+                "pragma": "h"
+            }
+        ]
     ]
 }
