@@ -31,4 +31,4 @@ class MicrophoneScreen extends Component {
   }
 }
 
-module.exports = AudioScreen
+module.exports = MicrophoneScreen
