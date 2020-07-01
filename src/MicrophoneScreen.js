@@ -1,5 +1,4 @@
 const { h, Component } = require('preact')
-const SnapshotButton = require('./SnapshotButton')
 const RecordButton = require('./RecordButton')
 const RecordingLength = require('./RecordingLength')
 
