@@ -170,7 +170,7 @@ module.exports = class Audio extends Plugin {
   /**
    * @returns {object}
    */
-  _getMediaRecorderOptions () {
+  _getRecorderOptions () {
     const options = {}
 
     // Try to use the `opts.preferredVideoMimeType` or one of the `allowedFileTypes` for the recording.

@@ -7,10 +7,6 @@ function isModeAvailable (modes, mode) {
 }
 
 class MicrophoneScreen extends Component {
-  componentDidMount () {
-    this.props.onFocus()
-  }
-
   componentWillUnmount () {
     this.props.onStop()
   }
