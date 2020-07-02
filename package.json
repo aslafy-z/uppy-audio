@@ -33,7 +33,7 @@
   "dependencies": {
     "@uppy/utils": "3.1.0",
     "opus-recorder": "^6.2.0",
-    "preact": "^10.4.5"
+    "preact": "^8.5.3"
   },
   "peerDependencies": {
     "@uppy/core": "^1.11.0"
