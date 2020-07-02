@@ -89,7 +89,7 @@ module.exports = class Audio extends Plugin {
         'wav',
       ],
       showRecordingLength: false,
-      workerPath: '/static/waveWorker.min.js',
+      encoderPath: 'waveWorker.min.js',
     }
 
     this.opts = { ...defaultOptions, ...opts }
@@ -196,7 +196,7 @@ module.exports = class Audio extends Plugin {
     //     options.mimeType = acceptableMimeTypes[0]
     //   }
     // }
-    options.workerPath = this.opts.workerPath
+    options.encoderPath = this.opts.encoderPath
     options.mimeType = "audio/wav"
     options.mediaTrackConstraints = true // https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints
     options.monitorGain = 0

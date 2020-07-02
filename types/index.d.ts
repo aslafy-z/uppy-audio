@@ -11,7 +11,7 @@ declare module Audio {
     modes?: AudioMode[]
     locale?: AudioLocale
     title?: string,
-    workerPath?: string,
+    encoderPath?: string,
   }
 }
 
