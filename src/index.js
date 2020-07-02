@@ -295,14 +295,11 @@ module.exports = class Audio extends Plugin {
     this.stream.getAudioTracks().forEach((track) => {
       track.stop()
     })
-    this.stream.getVideoTracks().forEach((track) => {
-      track.stop()
-    })
     this.audioActive = false
     this.stream = null
   }
 
-  getVideo () {
+  getAudio () {
     const mimeType = this.recordingChunks[0].type
     const fileExtension = getFileTypeExtension(mimeType)
 
