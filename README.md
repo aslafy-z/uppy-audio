@@ -18,8 +18,11 @@ const Audio = require('@zadkiel/uppy-audio')
 const uppy = Uppy()
 uppy.use(Audio, {
   showRecordingLength: true,
+  encoderPath: '/path/to/waveWorker.min.js'
 })
 ```
+
+You should host [`waveWorker.min.js` from opus-recorder project](https://github.com/chris-rudmin/opus-recorder/blob/master/dist/waveWorker.min.js) file on same-origin and then precise its path with `encoderPath` configuration variable. 
 
 ## Installation
 
