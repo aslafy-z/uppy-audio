@@ -36,11 +36,11 @@
   },
   "peerDependencies": {
     "@uppy/core": "^1.11.0",
-    "preact": "^8.5.3"
+    "preact": "^8.5.3 || ^10.0.0"
   },
   "devDependencies": {
     "@uppy/core": "1.11.0",
-    "preact": "8.5.3",
+    "preact": "10.4.5",
     "@babel/cli": "7.10.4",
     "@babel/core": "7.10.4",
     "@babel/plugin-proposal-class-properties": "7.10.4",
