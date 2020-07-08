@@ -39,6 +39,8 @@
     "preact": "^8.5.3"
   },
   "devDependencies": {
+    "@uppy/core": "^1.11.0",
+    "preact": "^8.5.3",
     "@babel/cli": "^7.10.4",
     "@babel/core": "^7.10.4",
     "@babel/plugin-proposal-class-properties": "^7.10.4",
