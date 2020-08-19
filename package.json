@@ -31,7 +31,7 @@
     "url": "git+https://github.com/aslafy-z/uppy-audio.git"
   },
   "dependencies": {
-    "@uppy/utils": "3.2.0",
+    "@uppy/utils": "3.2.2",
     "opus-recorder": "7.0.0"
   },
   "peerDependencies": {
