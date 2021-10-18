@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@uppy/utils": "3.2.0",
-    "opus-recorder": "7.0.0"
+    "opus-recorder": "8.0.5"
   },
   "peerDependencies": {
     "@uppy/core": "^1.11.0",
