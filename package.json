@@ -31,15 +31,15 @@
     "url": "git+https://github.com/aslafy-z/uppy-audio.git"
   },
   "dependencies": {
-    "@uppy/utils": "3.2.0",
+    "@uppy/utils": "5.7.5",
     "opus-recorder": "7.0.0"
   },
   "peerDependencies": {
-    "@uppy/core": "^1.11.0",
+    "@uppy/core": "^1.11.0 || ^3.0.0",
     "preact": "^8.5.3"
   },
   "devDependencies": {
-    "@uppy/core": "1.12.0",
+    "@uppy/core": "3.10.0",
     "preact": "8.5.3",
     "@babel/cli": "7.10.4",
     "@babel/core": "7.10.4",
